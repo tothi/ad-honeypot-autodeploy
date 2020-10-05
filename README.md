@@ -62,8 +62,8 @@ Tested on Ubuntu 18.04 LTS host.
 First, clone the repo:
 
 ```
-git clone
-cd ...
+git clone https://github.com/tothi/ad-honeypot-autodeploy
+cd ad-honeypot-autodeploy
 ```
 
 Before starting with Packer, set up the intial passwords:
