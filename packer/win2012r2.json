@@ -1,0 +1,46 @@
+{
+  "builders": [
+    {
+      "type": "qemu",
+      "name": "qemu-win2012r2",
+      "iso_url": "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO",
+      "iso_checksum": "sha256:6612b5b1f53e845aacdf96e974bb119a3d9b4dcb5b82e65804ab7e534dc7b4d5",
+      "output_directory": "output_win2012r2",
+      "disk_size": "40960M",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "cpus": "2",
+      "memory": "4096",
+      "vm_name": "win2012r2",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "floppy_files": [ "answer_files/win2012r2/Autounattend.xml", "virtio/w8.1/core/*", "scripts/bootstrap.ps1" ],
+      "communicator": "winrm",
+      "winrm_username": "administrator",
+      "winrm_password": "{{user `administrator_password`}}",
+      "winrm_use_ntlm": true,
+      "shutdown_command": "powershell -ep bypass c:\\windows\\temp\\shutdown.ps1",
+      "headless": true
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "scripts/shutdown.ps1",
+      "destination": "c:/windows/temp/shutdown.ps1"
+    },
+    {
+      "type": "file",
+      "source": "virtio/w8.1/extra",
+      "destination": "c:/windows/temp/"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/setupcomplete.ps1"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/win2012r2-dotnet-fix.ps1"
+    }
+  ]
+}

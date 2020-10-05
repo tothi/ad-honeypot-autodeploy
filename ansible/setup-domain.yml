@@ -1,0 +1,214 @@
+- name: Configure DC1
+  hosts: dc1
+  gather_facts: false
+  vars_files:
+    - users.yml
+  tasks:
+    - name: Using the default admin password
+      set_fact: ansible_password='{{ default_password }}'
+
+    - name: Waiting for WinRM...
+      wait_for_connection:
+
+    - name: Install AD Features
+      win_feature:
+        name: AD-Domain-Services
+        include_management_tools: yes
+        include_sub_features: yes
+        state: present
+      register: ad_features
+
+    - name: Set Hostname
+      win_hostname:
+        name: '{{ inventory_hostname }}'
+      register: dc_hostname
+
+    - name: Reboot Server
+      win_reboot:
+        msg: "Installing AD. Rebooting..."
+        pre_reboot_delay: 15
+      when: ad_features.reboot_required or dc_hostname.reboot_required
+
+    - name: Install Domain
+      win_domain:
+        dns_domain_name: '{{ dns_name }}'
+        safe_mode_password: '{{ dsrm_password }}'
+      register: ad
+
+    - name: Reboot Server
+      win_reboot:
+        msg: "Installing AD. Rebooting..."
+        pre_reboot_delay: 15
+      when: ad.reboot_required
+
+    - name: Waiting for Active Directory Web Services...
+      win_wait_for:
+        port: 9389
+
+    - name: Weaken Security Policy
+      win_shell: Set-ADDefaultDomainPasswordPolicy -Identity {{ dns_name }} -ComplexityEnabled 0 -LockoutThreshold 0
+      retries: 10
+      delay: 30
+      register: result
+      until: result.rc == 0
+
+    - name: Change Administrator password in domain
+      win_domain_user:
+        name: Administrator
+        state: present
+        password: '{{ domain_admin_password }}'
+
+    - name: Using the new domain Administrator password
+      set_fact: ansible_password='{{ domain_admin_password }}'
+
+    - name: Generate ADUser PS script
+      command: ./gen_users.py
+      delegate_to: 127.0.0.1
+
+    - name: Populate domain users
+      script: users.ps1
+
+#    - name: Populate domain users
+#      win_domain_user:
+#        name: '{{ item.name }}'
+#        state: present
+#        password: '{{ item.password }}'
+#        groups: '{{ item.groups }}'
+#      with_items: '{{ users }}'
+#      async: 600
+#      poll: 0
+#      register: create_users
+#
+#    - name: Check users
+#      async_status:
+#        jid: "{{ create_users.ansible_job_id }}"
+#      register: job_result
+#      until: job_result.finished
+#      retries: 30
+
+- name: Configure Graylog
+  hosts: graylog
+  gather_facts: false
+  tasks:
+    - name: Write new host keys to known hosts
+      shell: '/usr/bin/ssh-keygen -R {{ ansible_host }}; /usr/bin/ssh-keyscan -H {{ ansible_host }} | /bin/grep -v "^#" >> ~/.ssh/known_hosts'
+      delegate_to: 127.0.0.1
+
+    - name: Configure GELF UDP Collection
+      uri:
+        url: http://127.0.0.1:9000/api/system/inputs
+        method: POST
+        user: "{{ graylog_admin }}"
+        password: "{{ graylog_pwd }}"
+        body: '{"title":"nxlog_udp","type":"org.graylog2.inputs.gelf.udp.GELFUDPInput","configuration":{"bind_address":"0.0.0.0","port":12201,"recv_buffer_size":262144,"override_source":null,"decompress_size_limit":8388608},"global":true}'
+        force_basic_auth: yes
+        status_code: 201
+        body_format: json
+        headers:
+          X-Requested-By: cli
+
+    - name: Add Graylog Adapter for GeoIP Lookup
+      uri:
+        url: http://127.0.0.1:9000/api/system/lookup/adapters
+        method: POST
+        user: "{{ graylog_admin }}"
+        password: "{{ graylog_pwd }}"
+        body: '{"title":"GeoIP","description":"GeoIP Adapter","name":"geoip","custom_error_ttl_enabled":false,"custom_error_ttl":null,"custom_error_ttl_unit":null,"content_pack":null,"config":{"type":"maxmind_geoip","type":"maxmind_geoip","path":"/etc/graylog/server/GeoLite2-City.mmdb","database_type":"MAXMIND_CITY","check_interval":1,"check_interval_unit":"HOURS"}}'
+        force_basic_auth: yes
+        status_code: 200
+        body_format: json
+        headers:
+          X-Requested-By: cli
+
+    - name: Add Graylog Cache for GeoIP Lookup
+      uri:
+        url: http://127.0.0.1:9000/api/system/lookup/caches
+        method: POST
+        user: "{{ graylog_admin }}"
+        password: "{{ graylog_pwd }}"
+        body: '{"config":{"type":"guava_cache","type":"guava_cache","max_size":1000,"expire_after_access":1,"expire_after_access_unit":"HOURS","expire_after_write":0,"expire_after_write_unit":null},"title":"GeoIP","description":"GeoIP Cache","name":"geoip","content_pack":null}'
+        force_basic_auth: yes
+        status_code: 200
+        body_format: json
+        headers:
+          X-Requested-By: cli
+
+    - name: Copy dashboard.json
+      copy:
+        src: dashboard.json
+        dest: '/home/ubuntu/dashboard.json'
+
+    - name: More Configuration for Graylog...
+      script: graylog_config.sh '{{ graylog_admin }}' '{{ graylog_pwd }}'
+
+    - name: Disable SSH Password Auth
+      shell: "echo {{ ubuntu_password }} | /usr/bin/sudo -S /bin/sh -c '/bin/sed -i \"/PasswordAuthentication/cPasswordAuthentication no\" -i /etc/ssh/sshd_config; /bin/systemctl reload sshd'"
+
+    - name: Add extra SSH key
+      lineinfile:
+        path: /home/ubuntu/.ssh/authorized_keys
+        insertafter: EOF
+        line: "{{ lookup('file', 'id.pub') }}"
+      
+- name: Join Desktops
+  hosts: domain
+  gather_facts: true
+  tasks:
+    - name: Sync NTP Time
+      win_command: w32tm /resync
+
+    - name: Join Desktops
+      win_domain_membership:
+        dns_domain_name: '{{ dns_name }}'
+        hostname: '{{ inventory_hostname }}'
+        domain_admin_user: Administrator@{{dns_name}}
+        domain_admin_password: '{{ domain_admin_password }}'
+        state: domain
+      register: domain_state
+
+    - name: Reboot Server
+      win_reboot:
+        msg: 'Joined Domain. Rebooting...'
+      when: domain_state.reboot_required
+
+- name: Install Softwares on Domain
+  hosts: domain
+  gather_facts: false
+  tasks:
+    - name: Install Firefox
+      win_chocolatey:
+        name: firefox
+        state: present
+
+    - name: Install NXLog Collector
+      win_chocolatey:
+        name: nxlog
+        state: present
+
+    - name: Install Sysmon
+      win_chocolatey:
+        name: sysmon
+        ignore_checksums: true
+        state: present
+
+- name: Configure Logging
+  hosts: domain
+  gather_facts: false
+  tasks:
+    - name: Configure NXLog
+      win_copy:
+        src: nxlog.conf
+        dest: 'c:\Program Files (x86)\nxlog\conf\nxlog.conf'
+
+    - name: Fetch Sysmon config
+      win_get_url:
+        url: https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml
+        dest: 'c:\windows\sysmonconfig-export.xml'
+
+    - name: Launch Sysmon Service
+      win_command: 'c:\ProgramData\chocolatey\bin\Sysmon64.exe -accepteula -i c:\windows\sysmonconfig-export.xml'
+
+    - name: Restart NXLog
+      win_service:
+        name: nxlog
+        state: restarted

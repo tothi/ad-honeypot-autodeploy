@@ -1,0 +1,20 @@
+[domain]
+dc1 ansible_host=192.168.3.100 ansible_user=Administrator ansible_password='{{ domain_admin_password }}'
+desktop12 ansible_host=192.168.3.112 ansible_user=Administrator ansible_password='{{ default_password }}'
+
+[domain:vars]
+ansible_connection=winrm
+ansible_winrm_transport=ntlm
+ansible_port=5985
+dns_name=ecorp.local
+default_password=
+domain_admin_password=
+dsrm_password=
+
+[monitor]
+graylog ansible_host=192.168.3.191 ansible_connection=ssh ansible_user=ubuntu ansible_ssh_private_key_file=../packer/.ssh/id_ed25519
+
+[monitor:vars]
+ubuntu_password=
+graylog_admin=admin
+graylog_pwd=

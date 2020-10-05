@@ -1,0 +1,42 @@
+{
+  "builders": [
+    {
+      "type": "qemu",
+      "name": "qemu-win10",
+      "iso_url": "ISO/Win10_2004_EnglishInternational_x64.iso",
+      "iso_checksum": "sha256:4d7d73409b36e44462c690ec58ae0dc6846b01307799432fbd542388d4ad30e7",
+      "output_directory": "output_win10",
+      "disk_size": "40960M",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "cpus": "2",
+      "memory": "4096",
+      "vm_name": "win10",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "floppy_files": [ "answer_files/win10/Autounattend.xml", "virtio/w10/core/*", "scripts/bootstrap.ps1" ],
+      "communicator": "winrm",
+      "winrm_username": "administrator",
+      "winrm_password": "{{user `administrator_password`}}",
+      "winrm_use_ntlm": true,
+      "shutdown_command": "powershell -ep bypass c:\\windows\\temp\\shutdown.ps1",
+      "headless": true
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "scripts/shutdown.ps1",
+      "destination": "c:/windows/temp/shutdown.ps1"
+    },
+    {
+      "type": "file",
+      "source": "virtio/w10/extra",
+      "destination": "c:/windows/temp/"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/setupcomplete.ps1"
+    }
+  ]
+}

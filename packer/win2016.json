@@ -1,0 +1,42 @@
+{
+  "builders": [
+    {
+      "type": "qemu",
+      "name": "qemu-win2016",
+      "iso_url": "https://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO",
+      "iso_checksum": "sha256:1ce702a578a3cb1ac3d14873980838590f06d5b7101c5daaccbac9d73f1fb50f",
+      "output_directory": "output_win2016",
+      "disk_size": "40960M",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "cpus": "2",
+      "memory": "4096",
+      "vm_name": "win2016",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "floppy_files": [ "answer_files/win2016/Autounattend.xml", "virtio/2k16/core/*", "scripts/bootstrap.ps1" ],
+      "communicator": "winrm",
+      "winrm_username": "administrator",
+      "winrm_password": "{{user `administrator_password`}}",
+      "winrm_use_ntlm": true,
+      "shutdown_command": "powershell -ep bypass c:\\windows\\temp\\shutdown.ps1",
+      "headless": true
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "scripts/shutdown.ps1",
+      "destination": "c:/windows/temp/shutdown.ps1"
+    },
+    {
+      "type": "file",
+      "source": "virtio/2k16/extra",
+      "destination": "c:/windows/temp/"
+    },
+    {
+      "type": "powershell",
+      "script": "scripts/setupcomplete.ps1"
+    }
+  ]
+}
