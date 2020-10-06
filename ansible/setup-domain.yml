@@ -1,8 +1,8 @@
 - name: Configure DC1
   hosts: dc1
   gather_facts: false
-  vars_files:
-    - users.yml
+#  vars_files:
+#    - users.yml
   tasks:
     - name: Using the default admin password
       set_fact: ansible_password='{{ default_password }}'

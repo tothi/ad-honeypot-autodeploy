@@ -57,11 +57,11 @@ echo "[*] Updating passwords in ansible/hosts"
 domainadminpass_esc=$(printf '%s\n' "${domainadminpass}" | sed -e 's/[\/&]/\\&/g')
 dsrmpass_esc=$(printf '%s\n' "${dsrmpass}" | sed -e 's/[\/&]/\\&/g')
 graylogpass_esc=$(printf '%s\n' "${graylogpass}" | sed -e 's/[\/&]/\\&/g')
-sed -i ansible/hosts -e "s/^default_password=.*/default_password=${adminpass_esc}/" \
-                     -e "s/^domain_admin_password=.*/domain_admin_password=${domainadminpass_esc}/" \
-                     -e "s/^dsrm_password=.*/dsrm_password=${dsrmpass_esc}/" \
-                     -e "s/^ubuntu_password=.*/ubuntu_password=${ubuntupass_esc}/" \
-                     -e "s/^graylog_pwd=.*/graylog_pwd=${graylogpass_esc}/"
+sed -i ansible/hosts -e "s/^default_password=.*/default_password=\"${adminpass_esc}\"/" \
+                     -e "s/^domain_admin_password=.*/domain_admin_password=\"${domainadminpass_esc}\"/" \
+                     -e "s/^dsrm_password=.*/dsrm_password=\"${dsrmpass_esc}\"/" \
+                     -e "s/^ubuntu_password=.*/ubuntu_password=\"${ubuntupass_esc}\"/" \
+                     -e "s/^graylog_pwd=.*/graylog_pwd=\"${graylogpass_esc}\"/"
 
 echo "[+] Done. Deploy with packer+terraform+ansible."
 
