@@ -3,8 +3,8 @@
 Deploy a small, intentionally insecure, vulnerable Windows Domain
 for RDP Honeypot fully automatically.
 
-Runs on self-hosted virtualization using libvirt with QEMU/KVM
-(but it can be customized easily for cloud-based solutions).
+Runs on self-hosted virtualization using [libvirt](https://libvirt.org)
+with [QEMU](https://www.qemu.org/)/[KVM](https://www.linux-kvm.org/page/Main_Page) (but it can be customized easily for cloud-based solutions).
 
 Used for painlessly set up a small Windows Domain from scratch
 automatically (without user interaction) for the purpose of RDP Honeypot
@@ -15,14 +15,14 @@ Graylog server for logging the actions of the bad guys.
 
 ## Automatic deployment phases
 
-1. Packer: download the necessary install media and setup the
+1. [Packer](https://www.packer.io/): download the necessary install media and setup the
 automated base virtual machine images unattended.
 
-2. Terraform: provision the libvirt virtualization infrastructure
+2. [Terraform](https://www.terraform.io/): provision the libvirt virtualization infrastructure
 (network + virtual machines) using the packer-prepared
 virtual machine images.
 
-3. Ansible: Configure the infrastructure (DC, Desktop, Graylog)
+3. [Ansible](https://www.ansible.com/): Configure the infrastructure (DC, Desktop, Graylog)
 automatically, without user interaction.
 
 After going through the Packer+Terraform+Ansible pipeline,
@@ -36,12 +36,12 @@ Features of the running system are:
 
 * a Windows Server 2016 as a Domain Controller
 * a Windows 10 Desktop (version 2004) as a Domain Computer
-* a Graylog 3.3 (Open Source edition) running as a Log Collector on Ubuntu 18.04 LTS
-* Using VirtIO drivers for best performance
+* a [Graylog](https://www.graylog.org/) 3.3 (Open Source edition) running as a Log Collector on [Ubuntu](https://ubuntu.com/) 18.04 LTS
+* Using [VirtIO](https://wiki.libvirt.org/page/Virtio) drivers for best performance
 * Enabled RDP and WinRM Services
 * Populated Windows Active Directory with random users
-* Sysmon (from Windows Sysinternals) installed and running on Domain Computers
-* NXLog Collector running a Domain Computers and forwarding logs to Graylog
+* [Sysmon](https://docs.microsoft.com/en-us/sysinternals/downloads/sysmon) (from [Windows Sysinternals](https://docs.microsoft.com/en-us/sysinternals/)) installed and running on Domain Computers
+* [NXLog](https://nxlog.co/) Collector running a Domain Computers and forwarding logs to Graylog
 * Configured Graylog GeoIP lookup table and pipeline for IP addresses (useful for showing a map of invalid RDP login attempts)
 * Graylog World Map of RDP attacks
 
@@ -98,7 +98,7 @@ database is needed. Unfortunately due to licensing terms it cannot
 be redistributed, so you have to download it manually (after registering)
 from the MaxMind site. The free GeoLite2 version should work, get the
 "GeoLite2 City" Database in MMDB format (download the GZIP and untar)
-and put it at `resources/GeoLite2-City.mmdb'.
+and put it at `resources/GeoLite2-City.mmdb`.
 
 If you do not have Packer, get the latest version from the packer.io site
 ([download the pre-compiled binary](https://www.packer.io/downloads.html))
@@ -122,6 +122,8 @@ After these preparing steps, run the Packer builds in parallel:
 ```
 ./packer-build-all.sh
 ```
+
+![Packer in action](./packer.png)
 
 The images should be ready in a reasonable time (~20-30 mins depending
 on your host hardware power).
@@ -153,6 +155,8 @@ Build and launch the infrastructure ("apply the changes"):
 ```
 terraform apply
 ```
+
+![Terraform in action](./terraform.png)
 
 After a short time (~2-3 mins),
 the network and virtual machines are up and running.
@@ -202,6 +206,8 @@ Run the configuration phase:
 ```
 ansible-playbook -i hosts setup-domain.yml -v
 ```
+
+![Ansible in action](./ansible.png)
 
 After 20-25 mins everything is ready.
 
