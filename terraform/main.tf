@@ -29,10 +29,10 @@ resource "libvirt_network" "honeypot" {
   }
 
   provisioner "local-exec" {
-    command = "/usr/bin/sudo /sbin/iptables -I FORWARD -j DROP -i honeybr0 -d 192.168.0.0/16; /usr/bin/sudo /sbin/iptables -I FORWARD -j ACCEPT -i honeybr0 -o honeybr0"
+    command = "/usr/bin/sudo /usr/sbin/iptables -I FORWARD -j DROP -i honeybr0 -d 192.168.0.0/16; /usr/bin/sudo /usr/sbin/iptables -I FORWARD -j ACCEPT -i honeybr0 -o honeybr0"
   }
   provisioner "local-exec" {
-    command = "/usr/bin/sudo /sbin/iptables -D FORWARD -j DROP -i honeybr0 -d 192.168.0.0/16; /usr/bin/sudo /sbin/iptables -D FORWARD -j ACCEPT -i honeybr0 -o honeybr0"
+    command = "/usr/bin/sudo /usr/sbin/iptables -D FORWARD -j DROP -i honeybr0 -d 192.168.0.0/16; /usr/bin/sudo /usr/sbin/iptables -D FORWARD -j ACCEPT -i honeybr0 -o honeybr0"
     when    = destroy
   }
 }
@@ -129,7 +129,7 @@ terraform {
   required_providers {
     libvirt = {
       source  = "dmacvicar/libvirt"
-      version = "0.6.2"
+      version = "0.6.14"
     }
   }
 }

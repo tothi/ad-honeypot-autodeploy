@@ -3,8 +3,8 @@
     {
       "type": "qemu",
       "name": "qemu-win10",
-      "iso_url": "ISO/Win10_2004_EnglishInternational_x64.iso",
-      "iso_checksum": "sha256:4d7d73409b36e44462c690ec58ae0dc6846b01307799432fbd542388d4ad30e7",
+      "iso_url": "ISO/Win10_21H2_EnglishInternational_x64.iso",
+      "iso_checksum": "sha256:06fd4a512c5f3e8d16f77ca909c4f20110329b8cdd5ad101e2afc0d58b06d416",
       "output_directory": "output_win10",
       "disk_size": "40960M",
       "format": "qcow2",

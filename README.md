@@ -35,7 +35,7 @@ let's monitor the events through the Graylog.
 Features of the running system are:
 
 * a Windows Server 2016 as a Domain Controller
-* a Windows 10 Desktop (version 2004) as a Domain Computer
+* a Windows 10 Desktop (version 21H2) as a Domain Computer
 * a [Graylog](https://www.graylog.org/) 3.3 (Open Source edition) running as a Log Collector on [Ubuntu](https://ubuntu.com/) 18.04 LTS
 * Using [VirtIO](https://wiki.libvirt.org/page/Virtio) drivers for best performance
 * Enabled RDP and WinRM Services
@@ -66,7 +66,7 @@ git clone https://github.com/tothi/ad-honeypot-autodeploy
 cd ad-honeypot-autodeploy
 ```
 
-Before starting with Packer, set up the intial passwords:
+Before starting with Packer, set up the intial passwords (watch for complexity requirements):
 
 ```
 ./init_passwords.sh
@@ -91,12 +91,12 @@ get-virtio.sh script:
 Windows 10 should be downloaded manually by getting a temporary
 download link and save it to the ISO folder. The download link
 could be obtained from [here](https://www.microsoft.com/hu-hu/software-download/windows10ISO). Select the English (International), 64-bit version and
-save the ISO to `ISO/Win10_2004_EnglishInternational_x64.iso`.
+save the ISO to `ISO/Win10_21H2_EnglishInternational_x64.iso`.
 
 For mapping IP locations on a World Map in Graylog, the MaxMind GeoIP
 database is needed. Unfortunately due to licensing terms it cannot
 be redistributed, so you have to download it manually (after registering)
-from the MaxMind site. The free GeoLite2 version should work, get the
+from the [MaxMind site](https://www.maxmind.com). The free GeoLite2 version should work, get the
 "GeoLite2 City" Database in MMDB format (download the GZIP and untar)
 and put it at `resources/GeoLite2-City.mmdb`.
 
@@ -136,9 +136,8 @@ Get Terraform (>=0.13) if you do not have it (look at the install methods
 at Packer, above).
 
 [Terraform provider for libvirt](https://github.com/dmacvicar/terraform-provider-libvirt)
-is also needed, get the appropriate binary from the github
-[releases](https://github.com/dmacvicar/terraform-provider-libvirt/releases) page, and also look for [Terraform v13 migration notes](https://github.com/dmacvicar/terraform-provider-libvirt/blob/master/docs/migration-13.md) for proper
-installation.
+should be automatically downloaded from the [Terraform Registry](https://registry.terraform.io/)
+during the apply phase.
 
 Enter Terraform folder:
 
@@ -156,10 +155,14 @@ Build and launch the infrastructure ("apply the changes"):
 terraform apply
 ```
 
+Note, that if the user running `terraform apply` is not root, sudo privileges for running `/usr/sbin/iptables`
+is needed (without password).
+
 ![Terraform in action](./terraform.png)
 
 After a short time (~2-3 mins),
-the network and virtual machines are up and running.
+the network and virtual machines are up and running. If there are any failures, `terraform destroy` might not be enough,
+manual undefining resources may be necessary.
 
 > WARNING: You should take care of protecting your private
 > network. The terraform config (main.tf) provided here just contains
@@ -183,7 +186,7 @@ environment:
 ```
 python3 -m venv venv
 . ./venv/bin/activate
-pip install ansible pywinrm faker
+pip3 install -r requirements.txt
 ```
 
 For later use just activate the venv by
@@ -194,7 +197,7 @@ For later use just activate the venv by
 And just `deactivate` if it is not needed anymore in your
 current session.
 
-You should put an SSH public key with filename `id.pub` into the ansible
+You should put an SSH public key with filename `id.pub` (use `ssh-keygen`) into the ansible
 folder for accessing the Ubuntu Graylog machine with the ubuntu user
 (ansible will add it to `~ubuntu/.ssh/authorized_keys`).
 

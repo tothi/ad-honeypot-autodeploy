@@ -1,11 +1,13 @@
 Write-Output "[*] Installing extra VirtIO drivers..."
 
+<# this was fixed in new VirtIO release, no need to install custom cert
 $driverFile = "c:\windows\temp\extra\balloon.sys"
 $certFile = "c:\windows\temp\extra\redhat.cer"
 $exportType = [System.Security.Cryptography.X509Certificates.X509ContentType]::Cert
 $cert = (Get-AuthenticodeSignature $driverFile).SignerCertificate;
 [System.IO.File]::WriteAllBytes($certFile, $cert.Export($exportType));
 Import-Certificate -FilePath $certFile -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
+#>
 
 pnputil -i -a c:\windows\temp\extra\balloon.inf
 pnputil -i -a c:\windows\temp\extra\qxldod.inf

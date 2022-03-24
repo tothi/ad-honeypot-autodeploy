@@ -1,0 +1,4 @@
+wheel
+ansible
+pywinrm
+faker

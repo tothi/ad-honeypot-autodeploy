@@ -3,6 +3,11 @@
 
 echo "[*] Setting initial passwords."
 
+echo
+echo "[!] CAUTION: Some of the passwords below must meet complexity requirements!"
+echo "[!] It is not checked here, but lack of complexity may cause failure in the last (config deployment) phase"
+echo
+
 echo -n "[?] Enter default Windows local Administrator password: "
 read -s adminpass
 echo
