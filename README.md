@@ -44,14 +44,15 @@ Features of the running system are:
 * [NXLog](https://nxlog.co/) Collector running a Domain Computers and forwarding logs to Graylog
 * Configured Graylog GeoIP lookup table and pipeline for IP addresses (useful for showing a map of invalid RDP login attempts)
 * Graylog World Map of RDP attacks
+* an extra [Kali](https://www.kali.org/) VM attached to the Windows subnet for playing with attack techniques
 
 ## Host System Requirements
 
 Virtualization needs some power of your host system:
 
-* ~80 GB disk space for the base images and the sparse images of the guest computers.
-* at least 3 x 4 GB memory for the guest machines
-(may run with less than 12 GB because of overcommitment)
+* ~100 GB disk space for the base images and the sparse images of the guest computers.
+* at least 4 x 4 GB memory for the guest machines
+(may run with less than 16 GB because of overcommitment)
 * installed up-to-date libvirt with QEMU/KVM (official current packages in Ubuntu 18.04 LTS should work)
 * Python 3 (preferably with venv) for Ansible
 
@@ -221,6 +222,7 @@ After 20-25 mins everything is ready.
 | dc1       | 192.168.3.100 | Windows Server 2016       | Domain Controller         |
 | desktop12 | 192.168.3.112 | Windows 10 (version 2004) | Domain Member Workstation |
 | graylog   | 192.168.3.191 | Ubuntu 18.04 LTS          | Graylog Server            |
+| kali      | 192.168.3.192 | Kali Rolling (2022.3)     | Offensive Operations      |
 
 According to the libvirt network configuration (NAT), the hosts can access
 the public internet (if your host system allows it).

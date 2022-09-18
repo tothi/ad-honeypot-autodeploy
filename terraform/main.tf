@@ -6,6 +6,7 @@ locals {
   mac_dc1       = "50:73:0F:31:81:E1"
   mac_desktop12 = "50:73:0F:31:81:E2"
   mac_graylog   = "50:73:0F:31:81:F1"
+  mac_kali      = "50:73:0F:31:81:F2"
 }
 
 resource "libvirt_network" "honeypot" {
@@ -59,6 +60,12 @@ resource "libvirt_volume" "graylog-vol" {
   pool   = libvirt_pool.honeypot.name
   name   = "graylog-vol"
   source = "../packer/output_graylog/graylog"
+}
+
+resource "libvirt_volume" "kali-vol" {
+  pool   = libvirt_pool.honeypot.name
+  name   = "kali-vol"
+  source = "../packer/output_kali/kali"
 }
 
 resource "libvirt_domain" "dc1-dom" {
@@ -117,6 +124,27 @@ resource "libvirt_domain" "graylog-dom" {
     network_id     = libvirt_network.honeypot.id
     hostname       = "graylog"
     mac            = local.mac_graylog
+  }
+
+  xml {
+    xslt = file("timer-patch.xsl")
+  }
+}
+
+resource "libvirt_domain" "kali-dom" {
+  provider = libvirt
+  name     = "h-kali"
+  memory   = "4096"
+  vcpu     = 4
+
+  disk {
+    volume_id = libvirt_volume.kali-vol.id
+  }
+
+  network_interface {
+    network_id     = libvirt_network.honeypot.id
+    hostname       = "kali"
+    mac            = local.mac_kali
   }
 
   xml {
